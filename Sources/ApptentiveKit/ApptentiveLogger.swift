@@ -32,7 +32,7 @@ public struct ApptentiveLogger {
 
                 os_log(level.logType, log: log, "%@", message.description)
             } else {
-                print("Apptentive/\(level.label): \(message.description)")
+                print("\(level.label)/Apptentive: \(message.description)")
             }
         }
     }
@@ -282,11 +282,17 @@ public enum LogLevel: Int, Comparable {
         case .notice:
             return "N"
 
-        case .warning, .error:
+        case .warning:
+            return "W"
+
+        case .error:
             return "E"
 
-        case .critical, .fault:
+        case .critical:
             return "C"
+
+        case .fault:
+            return "F"
         }
     }
 }
