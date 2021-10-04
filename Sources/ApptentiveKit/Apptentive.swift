@@ -54,6 +54,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
         }
     }
 
+    /// The string used by the mParticle integration to identify the current user.
     @objc public var mParticleID: String? {
         get {
             self.person.mParticleID
@@ -201,7 +202,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
 
         // swift-format-ignore
         self.baseURL = baseURL ?? URL(string: "https://api.apptentive.com/")!
-        self.backendQueue = backendQueue ?? DispatchQueue(label: "Apptentive Backend")
+        self.backendQueue = backendQueue ?? DispatchQueue(label: "com.apptentive.backend", qos: .default, autoreleaseFrequency: .workItem)
         self.environment = environment ?? Environment()
         self.containerDirectory = containerDirectory ?? "com.apptentive.feedback"
 

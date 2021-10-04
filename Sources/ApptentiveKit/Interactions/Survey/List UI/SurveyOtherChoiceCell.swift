@@ -101,8 +101,8 @@ class SurveyOtherChoiceCell: UITableViewCell {
         self.textField.layer.cornerRadius = 6.0
 
         self.textField.translatesAutoresizingMaskIntoConstraints = false
-        self.textField.font = .apptentiveTextIntput
-        
+        self.textField.font = .apptentiveTextInput
+
         self.textField.adjustsFontForContentSizeCategory = true
         self.textField.backgroundColor = .apptentiveTextInputBackground
         self.textField.textColor = .apptentiveChoiceLabel

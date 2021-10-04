@@ -136,11 +136,14 @@ enum PayloadTypeCodingKeys: String, CodingKey {
 
 /// The union of coding keys from all payload types.
 enum AllPossiblePayloadCodingKeys: String, CodingKey {
-    // Generic keys
+    // Ubiquitous keys
     case nonce
     case creationDate = "client_created_at"
     case creationUTCOffset = "client_created_at_utc_offset"
     case sessionID = "session_id"
+
+    // Shared keys
+    case customData = "custom_data"
 
     // Survey response keys
     case answers
@@ -149,7 +152,6 @@ enum AllPossiblePayloadCodingKeys: String, CodingKey {
     case label
     case interactionID = "interaction_id"
     case userInfo = "data"
-    case customData = "custom_data"
     case time
     case location
     case commerce

@@ -44,7 +44,10 @@ extension Apptentive {
             segmentedControlAppearance.setBackgroundImage(image(with: buttonTintColor), for: .selected, barMetrics: .default)
         }
 
-        let barTextAttributes = [NSAttributedString.Key.foregroundColor: barForegroundColor, NSAttributedString.Key.font : UIFont.preferredFont(forTextStyle: .title2)]
+        let barTextAttributes = [NSAttributedString.Key.foregroundColor: barForegroundColor, NSAttributedString.Key.font: UIFont.preferredFont(forTextStyle: .title2)]
+
+        ApptentiveNavigationController.barTintColor = barTintColor
+        ApptentiveNavigationController.preferredStatusBarStyle = .lightContent
 
         let navigationBarAppearance = UINavigationBar.appearance(whenContainedInInstancesOf: [ApptentiveNavigationController.self])
         navigationBarAppearance.backgroundColor = barTintColor
@@ -56,6 +59,8 @@ extension Apptentive {
         toolBarAppearance.barTintColor = barTintColor
         toolBarAppearance.backgroundColor = barTintColor
         toolBarAppearance.isTranslucent = false
+
+        UIToolbar.apptentiveSurveysMode = .alwaysShown
 
         let barButtonItemAppearance = UIBarButtonItem.appearance(whenContainedInInstancesOf: [ApptentiveNavigationController.self])
         barButtonItemAppearance.setTitleTextAttributes(barTextAttributes, for: .normal)
@@ -98,6 +103,8 @@ extension Apptentive {
         UIColor.apptentiveTermsOfServiceLabel = termsOfServiceColor
 
         UIFont.apptentiveQuestionLabel = .preferredFont(forTextStyle: .callout)
+        UIFont.apptentiveChoiceLabel = .preferredFont(forTextStyle: .callout)
+        UIFont.apptentiveTextInput = .preferredFont(forTextStyle: .callout)
 
         UIBarButtonItem.apptentiveClose = {
             let systemClose: UIBarButtonItem = {
@@ -122,7 +129,7 @@ extension Apptentive {
 
         UIButton.apptentiveStyle = .radius(8.0)
     }
-   
+
     private func image(with color: UIColor?) -> UIImage? {
         let rect = CGRect(x: 0.0, y: 0.0, width: 1.0, height: 1.0)
         UIGraphicsBeginImageContext(rect.size)

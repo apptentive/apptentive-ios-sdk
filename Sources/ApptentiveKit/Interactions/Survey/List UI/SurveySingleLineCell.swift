@@ -59,7 +59,6 @@ class SurveySingleLineCell: UITableViewCell {
         self.isMarkedAsInvalid = false
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.contentView.backgroundColor = .apptentiveSecondaryGroupedBackground
-        self.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(self.textField)
         self.configureTextField()
     }
@@ -73,16 +72,17 @@ class SurveySingleLineCell: UITableViewCell {
         self.textField.textColor = .apptentiveTextInput
         self.textField.translatesAutoresizingMaskIntoConstraints = false
         self.textField.adjustsFontForContentSizeCategory = true
-        self.textField.font = .apptentiveTextIntput
+        self.textField.font = .apptentiveTextInput
         self.textField.returnKeyType = .done
 
         self.leadingConstraint = self.textField.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 15.0)
         self.trailingConstraint = self.contentView.trailingAnchor.constraint(equalTo: self.textField.trailingAnchor, constant: 15.0)
 
-        NSLayoutConstraint.activate([
-            self.textField.topAnchor.constraint(equalToSystemSpacingBelow: self.contentView.topAnchor, multiplier: 1.0),
-            self.leadingConstraint, self.trailingConstraint,
-            self.contentView.bottomAnchor.constraint(equalToSystemSpacingBelow: self.textField.bottomAnchor, multiplier: 1.0)
-        ].compactMap({$0}))
+        NSLayoutConstraint.activate(
+            [
+                self.textField.topAnchor.constraint(equalToSystemSpacingBelow: self.contentView.topAnchor, multiplier: 1.0),
+                self.leadingConstraint, self.trailingConstraint,
+                self.contentView.bottomAnchor.constraint(equalToSystemSpacingBelow: self.textField.bottomAnchor, multiplier: 1.0),
+            ].compactMap({ $0 }))
     }
 }

@@ -11,7 +11,7 @@ import UIKit
 /// An `InteractionPresenter` is used by the Apptentive SDK to present UI represented by `Interaction`  objects to the user.
 open class InteractionPresenter {
     /// A view controller that can be used to present view-controller-based interactions.
-    open var presentingViewController: UIViewController?
+    weak var presentingViewController: UIViewController?
 
     var delegate: InteractionDelegate?
 
@@ -119,7 +119,14 @@ open class InteractionPresenter {
             throw InteractionPresenterError.noPresentingViewController
         }
 
+        // Workaround for iOS 15 beta 8 clear bars at scroll view extrema.
+        if let navigationController = viewControllerToPresent as? ApptentiveNavigationController, let backgroundColor = ApptentiveNavigationController.barTintColor {
+            navigationController.view.backgroundColor = backgroundColor
+        }
+
+        // Display full screen
         viewControllerToPresent.modalPresentationStyle = .fullScreen
+
         presentingViewController.present(viewControllerToPresent, animated: true, completion: completion)
     }
 

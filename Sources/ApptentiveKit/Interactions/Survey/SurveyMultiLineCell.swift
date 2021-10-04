@@ -75,7 +75,6 @@ class SurveyMultiLineCell: UITableViewCell {
         self.isMarkedAsInvalid = false
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.contentView.backgroundColor = .apptentiveSecondaryGroupedBackground
-        self.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(self.textView)
 
         self.configureTextView()
@@ -90,21 +89,20 @@ class SurveyMultiLineCell: UITableViewCell {
         self.textView.textColor = .apptentiveTextInput
         self.textView.translatesAutoresizingMaskIntoConstraints = false
         self.textView.adjustsFontForContentSizeCategory = true
-        self.textView.font = .apptentiveTextIntput
+        self.textView.font = .apptentiveTextInput
         self.textView.returnKeyType = .default
 
         self.leadingConstraint = self.textView.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 10.0)
-       
         self.trailingConstraint = self.contentView.trailingAnchor.constraint(equalTo: self.textView.trailingAnchor, constant: 10.0)
-          
         self.heightConstraint = self.textView.heightAnchor.constraint(greaterThanOrEqualToConstant: 100.0)
 
-        NSLayoutConstraint.activate([
-            self.textView.topAnchor.constraint(equalToSystemSpacingBelow: self.contentView.topAnchor, multiplier: 1.0),
-            self.leadingConstraint, self.trailingConstraint,
-            self.contentView.bottomAnchor.constraint(equalToSystemSpacingBelow: self.textView.bottomAnchor, multiplier: 1.0),
-            self.heightConstraint
-        ].compactMap({$0}))
+        NSLayoutConstraint.activate(
+            [
+                self.textView.topAnchor.constraint(equalToSystemSpacingBelow: self.contentView.topAnchor, multiplier: 1.0),
+                self.leadingConstraint, self.trailingConstraint,
+                self.contentView.bottomAnchor.constraint(equalToSystemSpacingBelow: self.textView.bottomAnchor, multiplier: 1.0),
+                self.heightConstraint,
+            ].compactMap({ $0 }))
 
         self.textView.addSubview(self.placeholderLabel)
         self.placeholderLabel.isAccessibilityElement = false
@@ -113,7 +111,7 @@ class SurveyMultiLineCell: UITableViewCell {
         self.placeholderLabel.isUserInteractionEnabled = false
         self.placeholderLabel.adjustsFontSizeToFitWidth = true
         self.placeholderLabel.minimumScaleFactor = 0.1
-        self.placeholderLabel.font = .apptentiveTextIntput
+        self.placeholderLabel.font = .apptentiveTextInput
         self.placeholderLabel.textColor = .apptentiveTextInputPlaceholder
 
         self.updatePlaceholderConstraints()

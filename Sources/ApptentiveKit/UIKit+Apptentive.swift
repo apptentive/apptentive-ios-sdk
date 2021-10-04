@@ -10,6 +10,13 @@ import UIKit
 
 /// `UINavigationController` subclass intended primarily to facilitate scoping `UIAppearance` rules to Apptentive UI.
 public class ApptentiveNavigationController: UINavigationController {
+    // Used to work around a bug in iOS 15 beta 8 (and earlier?) where navigation/tool bars end up clear in some cases.
+    static var barTintColor: UIColor? = nil
+    static var preferredStatusBarStyle: UIStatusBarStyle = .default
+
+    public override var preferredStatusBarStyle: UIStatusBarStyle {
+        return Self.preferredStatusBarStyle
+    }
 }
 
 extension UITableView.Style {
@@ -53,6 +60,12 @@ extension UIButton {
 }
 
 extension UIImage {
+
+    /// The image to use for the top navigation bar for surveys.
+    public static var apptentiveHeaderLogo: UIImage? = {
+        return nil
+    }()
+
     /// The image to use next to a radio button question choice.
     public static var apptentiveRadioButton: UIImage? = {
         return apptentiveImage(named: "circle")
@@ -174,6 +187,7 @@ extension UIColor {
         }
     }()
 
+    /// The color to use for the placeholder text within text fields and text views.
     public static var apptentiveTextInputPlaceholder: UIColor = {
         if #available(iOS 13.0, *) {
             return .placeholderText
@@ -205,6 +219,7 @@ extension UIColor {
         }
     }()
 
+    /// The color to use for separators in e.g. table views.
     public static var apptentiveSeparator: UIColor = {
         if #available(iOS 13.0, *) {
             return .separator
@@ -243,7 +258,11 @@ extension UIColor {
 
     /// The color to use for the terms of service label.
     public static var apptentiveTermsOfServiceLabel: UIColor = {
-        return .white
+        if let tintColor = UIApplication.shared.keyWindow?.rootViewController?.view.tintColor {
+            return tintColor
+        } else {
+            return .systemBlue
+        }
     }()
 
     /// The color to use for the submit button text color.
@@ -256,7 +275,7 @@ extension UIColor {
 extension UIFont {
     /// The font used for all survey question labels.
     public static var apptentiveQuestionLabel: UIFont = {
-        return .preferredFont(forTextStyle: .callout)
+        return .preferredFont(forTextStyle: .body)
     }()
 
     /// The font used for the terms of service.
@@ -266,7 +285,7 @@ extension UIFont {
 
     /// the font used for all survey answer choice labels.
     public static var apptentiveChoiceLabel: UIFont = {
-        return .preferredFont(forTextStyle: .callout)
+        return .preferredFont(forTextStyle: .body)
     }()
 
     /// The font used for the min and max labels for the range survey.
@@ -293,8 +312,19 @@ extension UIFont {
     public static var apptentiveSubmitButtonTitle: UIFont = {
         return .preferredFont(forTextStyle: .headline)
     }()
-    
-    public static var apptentiveTextIntput: UIFont = {
-        return .preferredFont(forTextStyle: .callout)
+
+    /// The font used for the multi- and single-line text inputs in surveys.
+    public static var apptentiveTextInput: UIFont = {
+        return .preferredFont(forTextStyle: .body)
     }()
+}
+
+extension UIToolbar {
+    public enum ToolbarMode {
+        case alwaysShown
+        case hiddenWhenEmpty
+    }
+
+    /// The circumstances under which to show a toolbar in Surveys.
+    public static var apptentiveSurveysMode: ToolbarMode = .hiddenWhenEmpty
 }
