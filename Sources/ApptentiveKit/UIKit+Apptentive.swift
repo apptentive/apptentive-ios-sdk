@@ -325,5 +325,6 @@ extension UIToolbar {
         case hiddenWhenEmpty
     }
 
-    public static var apptentiveToolbarMode: ToolbarMode = .hiddenWhenEmpty
+    /// The circumstances under which to show a toolbar in Surveys.
+    public static var apptentiveSurveysMode: ToolbarMode = .hiddenWhenEmpty
 }
