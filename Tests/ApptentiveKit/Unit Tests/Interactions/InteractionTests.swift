@@ -22,9 +22,11 @@ class InteractionTests: XCTestCase {
         let directoryEnumerator = localFileManager.enumerator(at: directoryURL, includingPropertiesForKeys: Array(resourceKeys))!
 
         for case let fileURL as URL in directoryEnumerator {
-            let data = try Data(contentsOf: fileURL)
+            if !fileURL.absoluteString.contains("MessageList.json") {
+                let data = try Data(contentsOf: fileURL)
 
-            let _ = try JSONDecoder().decode(Interaction.self, from: data)
+                let _ = try JSONDecoder().decode(Interaction.self, from: data)
+            }
         }
     }
 }

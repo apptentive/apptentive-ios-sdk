@@ -80,7 +80,7 @@ class SurveyViewController: UITableViewController, UITextFieldDelegate, UITextVi
         super.viewDidLoad()
         view.backgroundColor = .apptentiveGroupedBackground
         self.tableView.separatorColor = .apptentiveSeparator
-        self.navigationController?.setToolbarHidden(false, animated: true)
+
         self.configureTermsOfService()
         self.navigationController?.presentationController?.delegate = self
 
@@ -209,19 +209,25 @@ class SurveyViewController: UITableViewController, UITextFieldDelegate, UITextVi
 
         case (let rangeQuestion as SurveyViewModel.RangeQuestion, let rangeChoiceCell as SurveyRangeCell):
             rangeChoiceCell.choiceLabels = rangeQuestion.choiceLabels
-            rangeChoiceCell.segmentedControl?.addTarget(self, action: #selector(rangeControlValueDidChange(_:)), for: .valueChanged)
-            rangeChoiceCell.segmentedControl?.tag = self.tag(for: indexPath)
-            for (index, subview) in rangeChoiceCell.segmentedControl!.subviews.enumerated() {
-                let segmentLabel = rangeChoiceCell.segmentedControl?.titleForSegment(at: index)
+
+            guard let segmentedControl = rangeChoiceCell.segmentedControl else {
+                assertionFailure("Expected range cell to have segmented control.")
+                break
+            }
+
+            segmentedControl.addTarget(self, action: #selector(rangeControlValueDidChange(_:)), for: .valueChanged)
+            segmentedControl.tag = self.tag(for: indexPath)
+            for (index, subview) in segmentedControl.subviews.enumerated() {
+                let segmentLabel = segmentedControl.titleForSegment(at: index)
                 subview.accessibilityLabel = segmentLabel
-                subview.accessibilityHint = rangeQuestion.accessibilityHintForSegment()
+                subview.accessibilityHint = rangeQuestion.accessibilityHintForSegment
                 subview.accessibilityTraits = .none
             }
 
             if let selectedIndex = rangeQuestion.selectedValueIndex {
-                rangeChoiceCell.segmentedControl?.selectedSegmentIndex = selectedIndex
+                segmentedControl.selectedSegmentIndex = selectedIndex
             } else {
-                rangeChoiceCell.segmentedControl?.selectedSegmentIndex = UISegmentedControl.noSegment
+                segmentedControl.selectedSegmentIndex = UISegmentedControl.noSegment
             }
             rangeChoiceCell.minLabel.text = rangeQuestion.minText
             rangeChoiceCell.maxLabel.text = rangeQuestion.maxText
@@ -635,6 +641,7 @@ class SurveyViewController: UITableViewController, UITextFieldDelegate, UITextVi
 
     private func configureTermsOfService() {
         if let terms = self.viewModel.termsOfService {
+            self.navigationController?.setToolbarHidden(false, animated: true)
 
             let flexible = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
             let barButtonItem = UIBarButtonItem(title: terms.bodyText, style: .plain, target: self, action: #selector(termsOfServiceTapped))
@@ -642,6 +649,8 @@ class SurveyViewController: UITableViewController, UITextFieldDelegate, UITextVi
             barButtonItem.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.apptentiveTermsOfServiceLabel, NSAttributedString.Key.foregroundColor: UIColor.apptentiveTermsOfServiceLabel, NSAttributedString.Key.underlineStyle: 1], for: .normal)
             barButtonItem.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.apptentiveTermsOfServiceLabel, NSAttributedString.Key.foregroundColor: UIColor.apptentiveTermsOfServiceLabel, NSAttributedString.Key.underlineStyle: 1], for: .selected)
             self.setToolbarItems([flexible, barButtonItem, flexible], animated: false)
+        } else {
+            self.navigationController?.setToolbarHidden((UIToolbar.apptentiveToolbarMode == .hiddenWhenEmpty), animated: true)
         }
     }
 
