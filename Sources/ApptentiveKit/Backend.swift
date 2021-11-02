@@ -201,7 +201,6 @@ class Backend {
 
     func invalidateEngagementManifest() {
         self.targeter.engagementManifest.expiry = .distantPast
-        self.processChanges(from: self.conversation)
     }
 
     /// Engages an event.
@@ -316,7 +315,9 @@ class Backend {
 
             // If we have credentials but we have not called the completion block, do so.
             if let connectCompletion = self.connectCompletion {
-                connectCompletion(.success(.cached))
+                DispatchQueue.main.async {
+                    connectCompletion(.success(.cached))
+                }
                 self.connectCompletion = nil
             }
 
@@ -423,9 +424,13 @@ class Backend {
             switch result {
             case .success(let conversationResponse):
                 self.conversation.conversationCredentials = Conversation.ConversationCredentials(token: conversationResponse.token, id: conversationResponse.id)
-                self.connectCompletion?(.success(.new))
+                DispatchQueue.main.async {
+                    self.connectCompletion?(.success(.new))
+                }
             case .failure(let error):
-                self.connectCompletion?(.failure(error))
+                DispatchQueue.main.async {
+                    self.connectCompletion?(.failure(error))
+                }
             }
 
             self.connectCompletion = nil
