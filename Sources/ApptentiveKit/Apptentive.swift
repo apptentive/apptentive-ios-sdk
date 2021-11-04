@@ -215,7 +215,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
         self.containerDirectory = containerDirectory ?? "com.apptentive.feedback"
 
         self.backend = Backend(queue: self.backendQueue, environment: self.environment, baseURL: self.baseURL)
-        
+
         self.interactionPresenter = InteractionPresenter()
 
         self.person = self.backend.conversation.person
