@@ -275,6 +275,9 @@ class Backend {
     /// Updates the in-memory conversation with the contents of a saved current or legacy conversation the first time it is called.
     ///
     /// Subsequent calls will have no effect.
+    /// - Parameters:
+    ///   - containerURL: The URL for the directory in which to look for the legacy conversation file.
+    ///   - environment: The Environment object used by the legacy conversation repository migration process.
     private func updateWithSavedConversationIfNeeded(containerURL: URL, environment: GlobalEnvironment) throws {
         if self.conversationNeedsLoading {
             guard let conversationRepository = self.conversationRepository else {
