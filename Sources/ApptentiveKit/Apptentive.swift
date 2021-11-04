@@ -121,7 +121,6 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
         }
 
         if !isTesting {
-
             if credentials.key.isEmpty || credentials.signature.isEmpty {
                 assertionFailure("App key or signature is missing.")
             } else if !credentials.key.hasPrefix("IOS-") {

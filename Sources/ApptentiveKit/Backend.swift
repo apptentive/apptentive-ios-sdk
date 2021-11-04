@@ -421,15 +421,17 @@ class Backend {
         ApptentiveLogger.default.info("Requesting a new conversation via Apptentive API.")
 
         self.requestRetrier.startUnlessUnderway(ApptentiveV9API.createConversation(self.conversation), identifier: "create conversation") { (result: Result<ConversationResponse, Error>) in
+            let completion = self.connectCompletion
             switch result {
+
             case .success(let conversationResponse):
                 self.conversation.conversationCredentials = Conversation.ConversationCredentials(token: conversationResponse.token, id: conversationResponse.id)
                 DispatchQueue.main.async {
-                    self.connectCompletion?(.success(.new))
+                    completion?(.success(.new))
                 }
             case .failure(let error):
                 DispatchQueue.main.async {
-                    self.connectCompletion?(.failure(error))
+                    completion?(.failure(error))
                 }
             }
 
