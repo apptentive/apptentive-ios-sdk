@@ -129,21 +129,21 @@ class Backend {
         self.conversation.appCredentials = appCredentials
     }
 
-    /// Sets up access to persistent storage and loads any previously-saved conversation data.
+    /// Sets up access to persistent storage and loads any previously-saved conversation data if needed.
     ///
     /// This method may be called multiple times if the device is locked with the app in the foreground and then unlocked.
     /// - Parameters:
     ///   - containerURL: A file URL corresponding to the container directory for Apptentive files.
     ///   - environment: An object implementing the `GlobalEnvironment` protocol.
     /// - Throws: An error if the conversation file exists but can't be read, or if the saved conversation can't be merged with the in-memory conversation.
-    func load(containerURL: URL, environment: GlobalEnvironment) throws {
+    func protectedDataDidBecomeAvailable(containerURL: URL, environment: GlobalEnvironment) throws {
         try self.createContainerDirectoryIfNeeded(containerURL: containerURL, fileManager: environment.fileManager)
 
         self.conversationRepository = PropertyListRepository<Conversation>(containerURL: containerURL, filename: "Conversation", fileManager: environment.fileManager)
         self.payloadSender.repository = PayloadSender.createRepository(containerURL: containerURL, filename: "PayloadQueue", fileManager: environment.fileManager)
         self.messageManager.messageListRepository = MessageManager.createRepository(containerURL: containerURL, filename: "MessageList", fileManager: environment.fileManager)
 
-        // On the first call to `load(containerURL:environment:)`, update the in-memory conversation with data from any saved conversation.
+        // On the first call to `protectedDataDidBecomeAvailable(containerURL:environment:)`, update the in-memory conversation with data from any saved conversation.
         try self.updateWithSavedConversationIfNeeded(containerURL: containerURL, environment: environment)
 
         // Because of potentially unbalanced calls to `load(containerURL:environment)` and `unload()`,
@@ -156,7 +156,7 @@ class Backend {
     /// Reliquishes access to persistent storage.
     ///
     /// Called when the device is locked with the app in the foreground.
-    func unload() {
+    func protectedDataWillBecomeUnavailable() {
         self.messageManager.messageListRepository = nil
         self.payloadSender.repository = nil
         self.conversationRepository = nil
