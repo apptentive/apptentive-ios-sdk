@@ -278,6 +278,7 @@ class Backend {
     /// - Parameters:
     ///   - containerURL: The URL for the directory in which to look for the legacy conversation file.
     ///   - environment: The Environment object used by the legacy conversation repository migration process.
+    /// - Throws: An error if the conversation file exists but can't be read, or if the saved conversation can't be merged with the in-memory conversation.
     private func updateWithSavedConversationIfNeeded(containerURL: URL, environment: GlobalEnvironment) throws {
         if self.conversationNeedsLoading {
             guard let conversationRepository = self.conversationRepository else {
