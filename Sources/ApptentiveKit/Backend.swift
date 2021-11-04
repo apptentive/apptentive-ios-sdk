@@ -157,6 +157,7 @@ class Backend {
     ///
     /// Called when the device is locked with the app in the foreground.
     func unload() {
+        self.messageManager.messageListRepository = nil
         self.payloadSender.repository = nil
         self.conversationRepository = nil
     }
