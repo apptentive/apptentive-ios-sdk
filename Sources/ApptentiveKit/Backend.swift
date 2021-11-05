@@ -315,10 +315,10 @@ class Backend {
 
             // If we have credentials but we have not called the completion block, do so.
             if let connectCompletion = self.connectCompletion {
+                self.connectCompletion = nil
                 DispatchQueue.main.async {
                     connectCompletion(.success(.cached))
                 }
-                self.connectCompletion = nil
             }
 
             // Supply the payload sender with necessary credentials
@@ -422,20 +422,19 @@ class Backend {
 
         self.requestRetrier.startUnlessUnderway(ApptentiveV9API.createConversation(self.conversation), identifier: "create conversation") { (result: Result<ConversationResponse, Error>) in
             let completion = self.connectCompletion
-            switch result {
+            self.connectCompletion = nil
 
+            switch result {
             case .success(let conversationResponse):
                 self.conversation.conversationCredentials = Conversation.ConversationCredentials(token: conversationResponse.token, id: conversationResponse.id)
-                DispatchQueue.main.async {
+                DispatchQueue.main.sync {
                     completion?(.success(.new))
                 }
             case .failure(let error):
-                DispatchQueue.main.async {
+                DispatchQueue.main.sync {
                     completion?(.failure(error))
                 }
             }
-
-            self.connectCompletion = nil
         }
     }
 
