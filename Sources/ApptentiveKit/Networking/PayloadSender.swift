@@ -26,6 +26,8 @@ class PayloadSender {
     /// The currently in-flight API request, if any.
     private var currentPayloadIdentifier: String? = nil
 
+    private var payloadsNeedLoading: Bool = true
+
     /// The repository to use when loading/saving payloads from/to persistent storage.
     var repository: FileRepository<[Payload]>? {
         didSet {
@@ -35,10 +37,16 @@ class PayloadSender {
                     return
                 }
 
-                let savedPayloads = try repository.load()
+                if self.payloadsNeedLoading {
+                    let savedPayloads = try repository.load()
 
-                ApptentiveLogger.default.debug("Merging \(savedPayloads.count) saved payloads into in-memory queue.")
-                self.payloads = savedPayloads + self.payloads
+                    ApptentiveLogger.default.debug("Merging \(savedPayloads.count) saved payloads into in-memory queue.")
+                    self.payloads = savedPayloads + self.payloads
+
+                    self.payloadsNeedLoading = false
+                } else {
+                    ApptentiveLogger.payload.debug("Saved payloads already loaded.")
+                }
             } catch let error {
                 ApptentiveLogger.default.error("Unable to load payload queue: \(error).")
                 assertionFailure("Payload queue file exists but can't be read (error: \(error.localizedDescription)).")
