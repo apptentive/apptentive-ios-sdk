@@ -18,6 +18,9 @@ class Backend {
     /// The `Apptentive` instance that owns this `Backend` instance.
     weak var frontend: Apptentive?
 
+    /// A Message Manager object which is initialized on launch.
+    public var messageManager: MessageManager
+
     /// Indicates the source of the conversation credentials when calling `connect(appCredentials:baseURL:completion:)`.
     enum ConnectionType {
 
@@ -51,6 +54,8 @@ class Backend {
 
     private var requestRetrier: HTTPRequestRetrier
 
+    private var configuration: Configuration?
+
     /// The completion handler that should be called when conversation credentials are loaded/retrieved.
     private var connectCompletion: ((Result<ConnectionType, Error>) -> Void)?
 
@@ -66,6 +71,12 @@ class Backend {
     /// A flag indicating whether the persistenc timer is active.
     private var persistenceTimerActive = false
 
+    /// The interval at which to poll for new messages.
+    private var messagePollingInterval: TimeInterval {
+        // TODO: Use foregroundPollingInterval when MC is presented
+        return self.configuration?.messageCenter.backgroundPollingInterval ?? 600
+    }
+
     /// Initializes a new backend instance.
     /// - Parameters:
     ///   - queue: The dispatch queue on which the backend instance should run.
@@ -77,7 +88,7 @@ class Backend {
         let requestRetrier = HTTPRequestRetrier(retryPolicy: HTTPRetryPolicy(), client: client, queue: queue)
         let payloadSender = PayloadSender(requestRetrier: requestRetrier)
 
-        self.init(queue: queue, conversation: conversation, targeter: Targeter(), requestRetrier: requestRetrier, payloadSender: payloadSender)
+        self.init(queue: queue, conversation: conversation, targeter: Targeter(), messageManager: MessageManager(), requestRetrier: requestRetrier, payloadSender: payloadSender)
     }
 
     /// This initializer intended for testing only.
@@ -85,12 +96,14 @@ class Backend {
     ///   - queue: The dispatch queue on which the backend instance should run.
     ///   - conversation: The conversation that the backend should start with.
     ///   - targeter: The targeter to use to determine if events should show an interaction.
+    ///   - messageManager: The message manager to use to manage messages for Message Center.
     ///   - requestRetrier: The Apptentive API request retrier to use to send API requests.
     ///   - payloadSender: The payload sender to use to send updates to the API.
-    init(queue: DispatchQueue, conversation: Conversation, targeter: Targeter, requestRetrier: HTTPRequestRetrier, payloadSender: PayloadSender) {
+    init(queue: DispatchQueue, conversation: Conversation, targeter: Targeter, messageManager: MessageManager, requestRetrier: HTTPRequestRetrier, payloadSender: PayloadSender) {
         self.queue = queue
         self.conversation = conversation
         self.targeter = targeter
+        self.messageManager = messageManager
         self.requestRetrier = requestRetrier
         self.payloadSender = payloadSender
     }
@@ -116,18 +129,22 @@ class Backend {
         self.conversation.appCredentials = appCredentials
     }
 
-    /// Sets up access to persistent storage and loads any previously-saved conversation data.
+    /// Sets up access to persistent storage and loads any previously-saved conversation data if needed.
     ///
     /// This method may be called multiple times if the device is locked with the app in the foreground and then unlocked.
     /// - Parameters:
     ///   - containerURL: A file URL corresponding to the container directory for Apptentive files.
     ///   - environment: An object implementing the `GlobalEnvironment` protocol.
     /// - Throws: An error if the conversation file exists but can't be read, or if the saved conversation can't be merged with the in-memory conversation.
-    func load(containerURL: URL, environment: GlobalEnvironment) throws {
+    func protectedDataDidBecomeAvailable(containerURL: URL, environment: GlobalEnvironment) throws {
         try self.createContainerDirectoryIfNeeded(containerURL: containerURL, fileManager: environment.fileManager)
 
         self.conversationRepository = PropertyListRepository<Conversation>(containerURL: containerURL, filename: "Conversation", fileManager: environment.fileManager)
         self.payloadSender.repository = PayloadSender.createRepository(containerURL: containerURL, filename: "PayloadQueue", fileManager: environment.fileManager)
+        self.messageManager.messageListRepository = MessageManager.createRepository(containerURL: containerURL, filename: "MessageList", fileManager: environment.fileManager)
+
+        // On the first call to `protectedDataDidBecomeAvailable(containerURL:environment:)`, update the in-memory conversation with data from any saved conversation.
+        try self.updateWithSavedConversationIfNeeded(containerURL: containerURL, environment: environment)
 
         // On the first call to `load(containerURL:environment:)`, update the in-memory conversation with data from any saved conversation.
         try self.updateWithSavedConversationIfNeeded(containerURL: containerURL, environment: environment)
@@ -142,7 +159,8 @@ class Backend {
     /// Reliquishes access to persistent storage.
     ///
     /// Called when the device is locked with the app in the foreground.
-    func unload() {
+    func protectedDataWillBecomeUnavailable() {
+        self.messageManager.messageListRepository = nil
         self.payloadSender.repository = nil
         self.conversationRepository = nil
     }
@@ -260,6 +278,10 @@ class Backend {
     /// Updates the in-memory conversation with the contents of a saved current or legacy conversation the first time it is called.
     ///
     /// Subsequent calls will have no effect.
+    /// - Parameters:
+    ///   - containerURL: The URL for the directory in which to look for the legacy conversation file.
+    ///   - environment: The Environment object used by the legacy conversation repository migration process.
+    /// - Throws: An error if the conversation file exists but can't be read, or if the saved conversation can't be merged with the in-memory conversation.
     private func updateWithSavedConversationIfNeeded(containerURL: URL, environment: GlobalEnvironment) throws {
         if self.conversationNeedsLoading {
             guard let conversationRepository = self.conversationRepository else {
@@ -341,6 +363,12 @@ class Backend {
 
             // Retrieve a new engagement manifest if the previous one is missing or expired.
             self.getInteractionsIfNeeded()
+
+            // Retrieve a new app configuration if the previous one is missing or expired.
+            self.getConfigurationIfNeeded()
+
+            // Check the API for new messages if we haven't done so recently (according to messagePollingInterval).
+            self.getMessagesIfNeeded()
 
             if self.conversation.person != oldValue.person {
                 ApptentiveLogger.network.debug("Person data changed. Enqueueing update.")
@@ -439,21 +467,28 @@ class Backend {
     }
 
     /// Retrieves a message list from the Apptentive API.
-    func getMessages() {
-        self.requestRetrier.startUnlessUnderway(ApptentiveV9API.getMessages(with: self.conversation), identifier: "get messages") { (result: Result<MessageList, Error>) in
-            switch result {
-            case .success(let messageList):
-                ApptentiveLogger.default.debug("Message List received.")
-            //TODO: Store the message list here.
-            case .failure(let error):
-                ApptentiveLogger.network.error("Failed to download message list: \(error)")
+    func getMessagesIfNeeded() {
+        if ((self.messageManager.lastFetchDate ?? Date.distantPast) + self.messagePollingInterval) < Date() {
+            self.requestRetrier.startUnlessUnderway(ApptentiveV9API.getMessages(with: self.conversation), identifier: "get messages") { (result: Result<MessageList, Error>) in
+                switch result {
+                case .success(let messageList):
+                    ApptentiveLogger.default.debug("Message List received.")
+                    self.messageManager.messageList = messageList
+                    do {
+                        try self.messageManager.saveMessagesToDisk()
+                    } catch let error {
+                        ApptentiveLogger.default.error("Unable to save messages to disk: \(error)")
+                    }
+                case .failure(let error):
+                    ApptentiveLogger.network.error("Failed to download message list: \(error)")
+                }
             }
         }
     }
 
     /// Retrieves an engagement manifest from the Apptentive API if the current one is missing or expired.
     private func getInteractionsIfNeeded() {
-        // Make sure we don't have a request in flight already, and that the engagement manifest in memory (if any) is expired.
+        // Check that the engagement manifest in memory (if any) is expired.
         if (self.targeter.engagementManifest.expiry ?? Date.distantPast) < Date() {
             ApptentiveLogger.default.info("Requesting new engagement manifest via Apptentive API (current one is absent or stale).")
 
@@ -466,6 +501,26 @@ class Backend {
 
                 case .failure(let error):
                     ApptentiveLogger.network.error("Failed to download engagement manifest: \(error).")
+                }
+            }
+        }
+    }
+
+    /// Retrieves a Configuration object from the Apptentive API if the current one is missing or expired.
+    private func getConfigurationIfNeeded() {
+        // Check that the configuration in memory (if any) is expired.
+        if (self.configuration?.expiry ?? Date.distantPast) < Date() {
+            ApptentiveLogger.default.info("Requesting new app configuration via Apptentive API (current one is absent or stale).")
+
+            self.requestRetrier.startUnlessUnderway(ApptentiveV9API.getConfiguration(with: self.conversation), identifier: "get configuration") { (result: Result<Configuration, Error>) in
+                switch result {
+                case .success(let configuration):
+                    ApptentiveLogger.default.debug("New app configuration received.")
+
+                    self.configuration = configuration
+
+                case .failure(let error):
+                    ApptentiveLogger.network.error("Failed to download app configuration: \(error).")
                 }
             }
         }

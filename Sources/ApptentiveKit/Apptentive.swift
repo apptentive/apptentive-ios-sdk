@@ -181,6 +181,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
     /// - Parameter text: The text to send in the body of the message.
     @objc(sendAttachmentText:)
     public func sendAttachment(_ text: String) {
+
         self.sendMessage(Message(body: text, isHidden: true))
     }
 
@@ -232,10 +233,10 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
         if self.environment.isInForeground {
             self.engage(event: .launch())
             self.backend.invalidateEngagementManifestForDebug(environment: self.environment)
-            self.backend.getMessages()
         }
 
         self.backend.frontend = self
+
         self.interactionPresenter.delegate = self
 
         ApptentiveLogger.default.info("Apptentive SDK Initialized.")
@@ -292,6 +293,16 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
             self.backend.sendMessage(message)
         }
     }
+    /// Receives the message list from the backend.
+    /// - Parameter completion: A completion handler to be called when the message center view model is initialized.
+    func getMessages(completion: @escaping (MessageList) -> Void) {
+        guard let messageList = self.backend.messageManager.messageList else { return }
+        self.backendQueue.async {
+            DispatchQueue.main.async {
+                completion(messageList)
+            }
+        }
+    }
 
     // MARK: EnvironmentDelegate
 
@@ -300,7 +311,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
             do {
                 let containerURL = try environment.applicationSupportURL().appendingPathComponent(self.containerDirectory)
 
-                try self.backend.load(containerURL: containerURL, environment: environment)
+                try self.backend.protectedDataDidBecomeAvailable(containerURL: containerURL, environment: environment)
 
                 self.person.merge(with: self.backend.conversation.person)
                 self.device.merge(with: self.backend.conversation.device)
@@ -313,7 +324,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
 
     func protectedDataWillBecomeUnavailable(_ environment: GlobalEnvironment) {
         self.backendQueue.async {
-            self.backend.unload()
+            self.backend.protectedDataWillBecomeUnavailable()
         }
     }
 
