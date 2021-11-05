@@ -33,14 +33,14 @@ class PayloadSender {
         didSet {
             do {
                 guard let repository = repository, repository.fileExists else {
-                    ApptentiveLogger.default.debug("No payload queue in persistent storage. Starting from scratch.")
+                    ApptentiveLogger.payload.debug("No payload queue in persistent storage. Starting from scratch.")
                     return
                 }
 
                 if self.payloadsNeedLoading {
                     let savedPayloads = try repository.load()
 
-                    ApptentiveLogger.default.debug("Merging \(savedPayloads.count) saved payloads into in-memory queue.")
+                    ApptentiveLogger.payload.debug("Merging \(savedPayloads.count) saved payloads into in-memory queue.")
                     self.payloads = savedPayloads + self.payloads
 
                     self.payloadsNeedLoading = false
@@ -48,7 +48,7 @@ class PayloadSender {
                     ApptentiveLogger.payload.debug("Saved payloads already loaded.")
                 }
             } catch let error {
-                ApptentiveLogger.default.error("Unable to load payload queue: \(error).")
+                ApptentiveLogger.payload.error("Unable to load payload queue: \(error).")
                 assertionFailure("Payload queue file exists but can't be read (error: \(error.localizedDescription)).")
             }
         }
@@ -74,7 +74,7 @@ class PayloadSender {
             do {
                 try self.savePayloadsIfNeeded()
             } catch let error {
-                ApptentiveLogger.network.error("Unable to save important payload: \(error).")
+                ApptentiveLogger.payload.error("Unable to save important payload: \(error).")
                 assertionFailure("Unable to save important payload: \(error).")
             }
         }
@@ -138,7 +138,7 @@ class PayloadSender {
     /// Send any queued payloads to the API.
     private func sendPayloads() {
         guard !isSuspended else {
-            ApptentiveLogger.network.debug("Payload sender is suspended")
+            ApptentiveLogger.payload.debug("Payload sender is suspended")
             return
         }
 
@@ -148,7 +148,7 @@ class PayloadSender {
         }
 
         guard currentPayloadIdentifier == nil else {
-            ApptentiveLogger.network.debug("Already sending a payload")
+            ApptentiveLogger.payload.debug("Already sending a payload")
             return
         }
 
