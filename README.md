@@ -1,25 +1,22 @@
-# ApptentiveKit
+# Apple-SDK
 
-ApptentiveKit is a ground-up rewrite of the Apptentive iOS SDK in Swift. 
+Apptentive SDK for Apple platforms. Currently intended to support UIKit-based apps running on iOS. 
 
-It currently supports UIKit-based apps on iOS and iPadOS. 
+# Running on a Device
 
-## Release Notes
+1. Make sure you have fastlane installed
+2. Get the Shared-Engineering 2 ASC API Key from 1Password
+3. Run ```
+ASC_API_KEY="<paste the key here, newlines and all>" bundle exec fastlane certs``` in the Terminal
+4. You should be able to build and run on a device in Xcode
 
-The initial beta release does not support the following features:
+# CI / CD
 
-- Message Center
-- Multi-user (login/logout) support
-- Dismiss All Interactions method
-- Event custom and extended data
+* [Travis](https://travis-ci.com/github/apptentive/apple-sdk)
+* [Github Releases](https://github.com/apptentive/apple-sdk/releases)
 
-### Primary Changes from Previous SDK
+Release Names: `iOSBundleShortVersion-GitBranch+TravisBuildNumber`
 
-- The module name has changed from `Apptentive` to `ApptentiveKit`. 
-- Most existing method calls should continue to work, albeit with some deprecation warnings. 
-- Events are now represented by an `Event` object, rather than a string literal. However the `Event` object conforms to `ExpressibleByStringLiteral`, so most method calls should continue to work. If not, wrap your event name in the `Event(named:)` constructor. 
-- The `register` method is now a method on the shared instance rather than a static/class method. 
-- The `register` now accepts an `Apptentive.AppCredentials` object rather than the (now deprecated) `ApptentiveConfiguration` object. 
-- The previous styling system has been dropped in favor of properties added to UIKit classes via extensions. See the `UIKit+Apptentive.swift` file. You can remove the default Apptentive UI style overrides by setting your Apptentive instance's `theme` property to `.none`. 
+## Running Integration Tests Locally
 
-Additional documentation will be forthcoming. 
+The integration tests included in the SDK need Apptentive credentials to run. These are looked up using the `UserDefaults` system. The recommended way of setting these up is to rename the `Defaults-Template.plist` file to `Defaults.plist` and enter them there. They can also be set via command line arguments to the test bundle.
