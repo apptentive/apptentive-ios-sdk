@@ -1,3 +1,11 @@
+# 2021-11-05 - 6.0.0-beta.4
+
+#### Bug Fixes
+
+- Fix a bug that caused conversation data to double every time the device was unlocked with the app in the foreground
+- Fix an access to the backend object from the main queue
+- Move a number of completion handlers to be called on the main queue
+
 # 2021-10-04 - 6.0.0-beta.3
 
 #### Bug Fixes
