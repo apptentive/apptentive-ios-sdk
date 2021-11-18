@@ -73,16 +73,16 @@ struct LegacyLoader: Loader {
     func cleanUp() throws {
         // Until we're out of beta, keep the legacy conversation around.
 
-//        let data = try Data(contentsOf: self.metadataURL)
-//        let legacyConversationMetadata = try NSKeyedUnarchiver.unarchivedObject(ofClass: LegacyConversationMetadata.self, from: data)
-//
-//        // Look for an anonymous conversation's metadata item.
-//        try legacyConversationMetadata?.items.compactMap { $0.directoryName }.forEach { directoryName in
-//            let conversationDirectoryURL = self.containerURL.appendingPathComponent(directoryName, isDirectory: true)
-//            try self.environment.fileManager.removeItem(at: conversationDirectoryURL)
-//        }
-//
-//        try self.environment.fileManager.removeItem(at: self.metadataURL)
+        //        let data = try Data(contentsOf: self.metadataURL)
+        //        let legacyConversationMetadata = try NSKeyedUnarchiver.unarchivedObject(ofClass: LegacyConversationMetadata.self, from: data)
+        //
+        //        // Look for an anonymous conversation's metadata item.
+        //        try legacyConversationMetadata?.items.compactMap { $0.directoryName }.forEach { directoryName in
+        //            let conversationDirectoryURL = self.containerURL.appendingPathComponent(directoryName, isDirectory: true)
+        //            try self.environment.fileManager.removeItem(at: conversationDirectoryURL)
+        //        }
+        //
+        //        try self.environment.fileManager.removeItem(at: self.metadataURL)
     }
 
     private var metadataURL: URL {
@@ -90,8 +90,8 @@ struct LegacyLoader: Loader {
     }
 }
 
-fileprivate extension EngagementMetrics {
-    init(legacyMetrics: [String: LegacyCount]) {
+extension EngagementMetrics {
+    fileprivate init(legacyMetrics: [String: LegacyCount]) {
         self.metrics = legacyMetrics.mapValues {
             EngagementMetric(totalCount: $0.totalCount, versionCount: $0.versionCount, buildCount: $0.buildCount, lastInvoked: $0.lastInvoked)
         }

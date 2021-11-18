@@ -159,7 +159,6 @@ class Backend {
             ApptentiveLogger.default.info("In-memory conversation already contains data from any saved conversation.")
         }
 
-
         // Because of potentially unbalanced calls to `load(containerURL:environment)` and `unload()`,
         // we suspend (but don't discard) the persistence timer. Therefore it should only be created once.
         if self.persistenceTimer == nil {
