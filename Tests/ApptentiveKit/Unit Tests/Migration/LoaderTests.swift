@@ -11,6 +11,12 @@ import XCTest
 @testable import ApptentiveKit
 
 class LoaderTests: XCTestCase {
+    override func setUpWithError() throws {
+        try MockEnvironment.cleanContainerURL()
+
+        super.setUp()
+    }
+
     func testLegacyLoading() throws {
         guard let containerURL = Bundle(for: Self.self).url(forResource: "Legacy Data", withExtension: "") else {
             throw TestError()

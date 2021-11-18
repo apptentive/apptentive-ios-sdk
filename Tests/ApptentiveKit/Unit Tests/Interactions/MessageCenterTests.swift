@@ -12,12 +12,13 @@ import XCTest
 @testable import ApptentiveKit
 
 class MessageCenterTests: XCTestCase {
-
     var environment = MockEnvironment()
     var viewModel: MessageCenterViewModel?
     var spySender: SpyInteractionDelegate?
 
     override func setUpWithError() throws {
+        try MockEnvironment.cleanContainerURL()
+
         let interaction = try InteractionTestHelpers.loadInteraction(named: "MessageCenter")
         guard case let Interaction.InteractionConfiguration.messageCenter(configuration) = interaction.configuration else {
             return XCTFail("Unable to create view model")
