@@ -21,7 +21,7 @@ struct CurrentLoader: Loader {
             do {
                 let loader = LoaderType.init(containerURL: containerURL, environment: environment)
 
-                if loader.filesExist {
+                if loader.conversationFileExists {
                     try completion(loader)
 
                     return
@@ -41,7 +41,7 @@ struct CurrentLoader: Loader {
         self.environment = environment
     }
 
-    var filesExist: Bool {
+    var conversationFileExists: Bool {
         return self.environment.fileManager.fileExists(atPath: self.conversationFileURL.path)
     }
 
@@ -51,12 +51,17 @@ struct CurrentLoader: Loader {
     }
 
     func loadPayloads() throws -> [Payload] {
-        let data = try Data(contentsOf: self.payloadsFileURL)
-        return try self.decoder.decode([Payload].self, from: data)
+        if self.payloadsFileExists {
+            let data = try Data(contentsOf: self.payloadsFileURL)
+            return try self.decoder.decode([Payload].self, from: data)
+        } else {
+            return []
+        }
     }
 
     func loadMessages() throws -> MessageList? {
-        if let data = try? Data(contentsOf: self.messagesFileURL) {
+        if self.messagesFileExists {
+            let data = try Data(contentsOf: self.messagesFileURL)
             return try self.decoder.decode(MessageList.self, from: data)
         } else {
             return nil
@@ -77,5 +82,13 @@ struct CurrentLoader: Loader {
 
     private var messagesFileURL: URL {
         return self.containerURL.appendingPathComponent(Self.messagesFilename).appendingPathExtension(Self.fileExtension)
+    }
+
+    private var payloadsFileExists: Bool {
+        return self.environment.fileManager.fileExists(atPath: self.payloadsFileURL.path)
+    }
+
+    private var messagesFileExists: Bool {
+        return self.environment.fileManager.fileExists(atPath: self.messagesFileURL.path)
     }
 }

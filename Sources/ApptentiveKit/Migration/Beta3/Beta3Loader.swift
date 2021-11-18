@@ -17,7 +17,7 @@ struct Beta3Loader: Loader {
         self.environment = environment
     }
 
-    var filesExist: Bool {
+    var conversationFileExists: Bool {
         return self.environment.fileManager.fileExists(atPath: self.conversationFileURL.path)
     }
 

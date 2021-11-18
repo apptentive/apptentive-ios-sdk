@@ -11,7 +11,7 @@ import Foundation
 protocol Loader {
     init(containerURL: URL, environment: GlobalEnvironment)
 
-    var filesExist: Bool { get }
+    var conversationFileExists: Bool { get }
 
     func loadConversation() throws -> Conversation
     func loadPayloads() throws -> [Payload]
