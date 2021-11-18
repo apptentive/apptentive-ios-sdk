@@ -33,23 +33,14 @@ class MessageManager {
     var lastFetchDate: Date?
 
     /// The persistence repository used for the message list.
-    var messageListRepository: PropertyListRepository<MessageList>? {
-        didSet {
-            do {
-                guard let repository = messageListRepository, repository.fileExists else {
-                    ApptentiveLogger.default.debug("No messages in persistence storage.")
-                    return
-                }
-                let savedMessageList = try repository.load()
-                self.messageList = savedMessageList
-            } catch let error {
-                ApptentiveLogger.default.error("Unable to load messages from peristence: \(error)")
-            }
-        }
-    }
+    var messageListRepository: PropertyListRepository<MessageList>?
 
     static func createRepository(containerURL: URL, filename: String, fileManager: FileManager) -> PropertyListRepository<MessageList> {
         return PropertyListRepository<MessageList>(containerURL: containerURL, filename: filename, fileManager: fileManager)
+    }
+
+    func load(from loader: Loader) throws {
+        self.messageList = try loader.loadMessages()
     }
 
     func saveMessagesToDisk() throws {

@@ -23,37 +23,15 @@ class PayloadSender {
         }
     }
 
-    /// The repository to use when loading/saving payloads from/to persistent storage.
-    var repository: FileRepository<[Payload]>? {
-        didSet {
-            do {
-                guard let repository = repository, repository.fileExists else {
-                    ApptentiveLogger.payload.debug("No payload queue in persistent storage. Starting from scratch.")
-                    return
-                }
-
-                if self.payloadsNeedLoading {
-                    let savedPayloads = try repository.load()
-
-                    ApptentiveLogger.payload.debug("Merging \(savedPayloads.count) saved payloads into in-memory queue.")
-                    self.payloads = savedPayloads + self.payloads
-
-                    self.payloadsNeedLoading = false
-                } else {
-                    ApptentiveLogger.payload.debug("Saved payloads already loaded.")
-                }
-            } catch let error {
-                ApptentiveLogger.payload.error("Unable to load payload queue: \(error).")
-                assertionFailure("Payload queue file exists but can't be read (error: \(error.localizedDescription)).")
-            }
-        }
-    }
-
     /// Creates a new payload sender.
     /// - Parameter requestRetrier: The HTTPRequestRetrier instance to use to connect to the API.
     init(requestRetrier: HTTPRequestStarting) {
         self.requestRetrier = requestRetrier
         self.payloads = [Payload]()
+    }
+
+    func load(from loader: Loader) throws {
+        self.payloads = try loader.loadPayloads() + self.payloads
     }
 
     /// Enqueues a payload for sending and triggers the queue to send the next available request.
@@ -112,6 +90,9 @@ class PayloadSender {
             self.payloadsNeedSaving = false
         }
     }
+
+    /// The repository to use when saving payloads to persistent storage.
+    var repository: FileRepository<[Payload]>?
 
     /// The currently in-flight API request, if any.
     private var currentPayloadIdentifier: String? = nil

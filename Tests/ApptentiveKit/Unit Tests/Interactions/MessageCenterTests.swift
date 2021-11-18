@@ -57,14 +57,9 @@ class MessageCenterTests: XCTestCase {
             }
         }
     }
-    func testMessageListPersistence() {
-        var url: URL?
-        do {
-            let containerURL = try self.environment.applicationSupportURL().appendingPathComponent("com.apptentive.feedback")
-            url = containerURL
-        } catch {
-            NSLog("Error retreiving url: \(error)")
-        }
+
+    func testMessageListPersistence() throws {
+        let containerURL = try self.environment.applicationSupportURL().appendingPathComponent("com.apptentive.feedback")
         let data = CustomData()
         let messageList = MessageList(
             messages: [
@@ -75,19 +70,14 @@ class MessageCenterTests: XCTestCase {
         let messageManager = MessageManager()
         messageManager.messageList = messageList
 
-        if let url = url {
-            messageManager.messageListRepository = MessageManager.createRepository(containerURL: url, filename: "", fileManager: FileManager.default)
-            try? messageManager.saveMessagesToDisk()
-            messageManager.messageList = nil
-            do {
-                let loadedMessages = try messageManager.messageListRepository?.load()
-                if let message = loadedMessages?.messages {
-                    XCTAssertNotNil(message)
-                }
-            } catch {
-                NSLog("Error loading messages: \(error)")
-            }
-        }
+        messageManager.messageListRepository = MessageManager.createRepository(containerURL: containerURL, filename: CurrentLoader.messagesFilename, fileManager: MockEnvironment().fileManager)
+        try messageManager.saveMessagesToDisk()
+        messageManager.messageList = nil
+
+        let loader = CurrentLoader(containerURL: containerURL, environment: MockEnvironment())
+        let loadedMessages = try loader.loadMessages()
+
+        XCTAssertEqual(messageList.messages.count, loadedMessages?.messages.count)
     }
 
     func testGetMessage() {
