@@ -70,7 +70,7 @@ class MessageCenterTests: XCTestCase {
         let messageManager = MessageManager()
         messageManager.messageList = messageList
 
-        messageManager.messageListRepository = MessageManager.createRepository(containerURL: containerURL, filename: CurrentLoader.messagesFilename, fileManager: MockEnvironment().fileManager)
+        messageManager.messageListSaver = MessageManager.createSaver(containerURL: containerURL, filename: CurrentLoader.messagesFilename, fileManager: MockEnvironment().fileManager)
         try messageManager.saveMessagesToDisk()
         messageManager.messageList = nil
 

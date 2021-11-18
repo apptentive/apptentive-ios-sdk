@@ -1,5 +1,5 @@
 //
-//  FileRepository.swift
+//  Saver.swift
 //  ApptentiveKit
 //
 //  Created by Frank Schmitt on 11/21/19.
@@ -8,13 +8,13 @@
 
 import Foundation
 
-/// Represents a file in the filesystem and allows reading and writing encoded data to and from it.
-class FileRepository<T> {
+/// Represents a file in the filesystem and allows writing encoded data to it.
+class Saver<T> {
     let containerURL: URL
     let fileManager: FileManager
     let filename: String
 
-    /// Initializes a new file repository.
+    /// Initializes a new saver.
     /// - Parameters:
     ///   - containerURL: A file URL pointing to the parent directory for the file.
     ///   - filename: The name to use for the file.
@@ -25,7 +25,7 @@ class FileRepository<T> {
         self.fileManager = fileManager
     }
 
-    /// Encodes and saves the specified object to the repository's file.
+    /// Encodes and saves the specified object to the saver's file.
     /// - Parameter object: The object to encode and save.
     /// - Throws: An error if the object can't be encoded or saved.
     func save(_ object: T) throws {
@@ -59,8 +59,8 @@ class FileRepository<T> {
     }
 }
 
-/// A concrete subclass of `FileRepository` that saves data in Property List (plist) format.
-class PropertyListRepository<T: Codable>: FileRepository<T> {
+/// A concrete subclass of `Saver` that saves data in Property List (plist) format.
+class PropertyListSaver<T: Codable>: Saver<T> {
     let decoder = PropertyListDecoder()
     let encoder = PropertyListEncoder()
 

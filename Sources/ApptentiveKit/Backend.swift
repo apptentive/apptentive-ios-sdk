@@ -46,8 +46,8 @@ class Backend {
 
     var messageCenterInForeground: Bool = false
 
-    /// The file repository used to load and save the conversation from/to persistent storage.
-    private var conversationRepository: PropertyListRepository<Conversation>?
+    /// The saver used to load and save the conversation from/to persistent storage.
+    private var conversationSaver: PropertyListSaver<Conversation>?
 
     /// The object that determines whether an interaction should be presented when an event is engaged.
     private var targeter: Targeter
@@ -144,9 +144,9 @@ class Backend {
     func protectedDataDidBecomeAvailable(containerURL: URL, environment: GlobalEnvironment) throws {
         try self.createContainerDirectoryIfNeeded(containerURL: containerURL, fileManager: environment.fileManager)
 
-        self.conversationRepository = PropertyListRepository<Conversation>(containerURL: containerURL, filename: CurrentLoader.conversationFilename, fileManager: environment.fileManager)
-        self.payloadSender.repository = PayloadSender.createRepository(containerURL: containerURL, filename: CurrentLoader.payloadsFilename, fileManager: environment.fileManager)
-        self.messageManager.messageListRepository = MessageManager.createRepository(containerURL: containerURL, filename: CurrentLoader.messagesFilename, fileManager: environment.fileManager)
+        self.conversationSaver = PropertyListSaver<Conversation>(containerURL: containerURL, filename: CurrentLoader.conversationFilename, fileManager: environment.fileManager)
+        self.payloadSender.saver = PayloadSender.createSaver(containerURL: containerURL, filename: CurrentLoader.payloadsFilename, fileManager: environment.fileManager)
+        self.messageManager.messageListSaver = MessageManager.createSaver(containerURL: containerURL, filename: CurrentLoader.messagesFilename, fileManager: environment.fileManager)
 
         if self.conversationNeedsLoading {
             CurrentLoader.loadLatestVersion(containerURL: containerURL, environment: environment) { loader in
@@ -171,9 +171,9 @@ class Backend {
     ///
     /// Called when the device is locked with the app in the foreground.
     func protectedDataWillBecomeUnavailable() {
-        self.messageManager.messageListRepository = nil
-        self.payloadSender.repository = nil
-        self.conversationRepository = nil
+        self.messageManager.messageListSaver = nil
+        self.payloadSender.saver = nil
+        self.conversationSaver = nil
     }
 
     func willEnterForeground(environment: GlobalEnvironment) {
@@ -400,8 +400,8 @@ class Backend {
 
     /// Saves the conversation to persistent storage.
     private func saveConversationIfNeeded() throws {
-        if let repository = self.conversationRepository, self.conversationNeedsSaving {
-            try repository.save(self.conversation)
+        if let saver = self.conversationSaver, self.conversationNeedsSaving {
+            try saver.save(self.conversation)
             self.conversationNeedsSaving = false
         }
     }

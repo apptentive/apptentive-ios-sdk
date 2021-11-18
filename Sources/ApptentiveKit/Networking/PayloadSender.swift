@@ -73,26 +73,26 @@ class PayloadSender {
         self.sendPayloads()
     }
 
-    /// Helper method to build the payload sender's repository object.
+    /// Helper method to build the payload sender's saver object.
     /// - Parameters:
     ///   - containerURL: The URL in which to find the file.
     ///   - filename: The name of the file.
     ///   - fileManager: The `FileManager` object to use for accessing the file.
-    /// - Returns: The newly-created repository object.
-    static func createRepository(containerURL: URL, filename: String, fileManager: FileManager) -> PropertyListRepository<[Payload]> {
-        return PropertyListRepository<[Payload]>(containerURL: containerURL, filename: filename, fileManager: fileManager)
+    /// - Returns: The newly-created saver object.
+    static func createSaver(containerURL: URL, filename: String, fileManager: FileManager) -> PropertyListSaver<[Payload]> {
+        return PropertyListSaver<[Payload]>(containerURL: containerURL, filename: filename, fileManager: fileManager)
     }
 
     /// Saves any unsaved payloads, for example when the app exits.
     func savePayloadsIfNeeded() throws {
-        if let repository = self.repository, self.payloadsNeedSaving {
-            try repository.save(self.payloads)
+        if let saver = self.saver, self.payloadsNeedSaving {
+            try saver.save(self.payloads)
             self.payloadsNeedSaving = false
         }
     }
 
-    /// The repository to use when saving payloads to persistent storage.
-    var repository: FileRepository<[Payload]>?
+    /// The saver to use when saving payloads to persistent storage.
+    var saver: Saver<[Payload]>?
 
     /// The currently in-flight API request, if any.
     private var currentPayloadIdentifier: String? = nil
@@ -100,7 +100,7 @@ class PayloadSender {
     /// Whether payloads from last session need to be loaded.
     private var payloadsNeedLoading: Bool = true
 
-    /// Whether the in-memory payload queue should be saved to the repository.
+    /// Whether the in-memory payload queue should be saved to the saver.
     private var payloadsNeedSaving: Bool = false
 
     /// Whether the payload sender is suspended (paused).
