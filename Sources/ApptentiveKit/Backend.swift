@@ -293,7 +293,7 @@ class Backend {
         let previousConversation = try loader.loadConversation()
         self.conversation = try previousConversation.merged(with: self.conversation)
 
-            self.conversationNeedsLoading = false
+        self.conversationNeedsLoading = false
 
         self.processChanges(from: previousConversation)
         try self.saveConversationIfNeeded()
@@ -386,7 +386,9 @@ class Backend {
     }
 
     /// Saves the conversation and payload queue to persistent storage if needed.
-    func saveToPersistentStorageIfNeeded() {
+    ///
+    /// Would be private but needs to be internal for testing.
+    internal func saveToPersistentStorageIfNeeded() {
         do {
             try self.saveConversationIfNeeded()
             try self.payloadSender.savePayloadsIfNeeded()
@@ -456,7 +458,7 @@ class Backend {
     }
 
     /// Retrieves a message list from the Apptentive API.
-    func getMessagesIfNeeded() {
+    private func getMessagesIfNeeded() {
         if ((self.messageManager.lastFetchDate ?? Date.distantPast) + self.messagePollingInterval) < Date() {
             self.requestRetrier.startUnlessUnderway(ApptentiveV9API.getMessages(with: self.conversation), identifier: "get messages") { (result: Result<MessageList, Error>) in
                 switch result {
