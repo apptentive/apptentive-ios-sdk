@@ -15,9 +15,9 @@ struct CurrentLoader: Loader {
     static let fileExtension = "plist"
 
     static func loadLatestVersion(containerURL: URL, environment: GlobalEnvironment, completion: @escaping (Loader) throws -> Void) {
-        let LoaderChain: [Loader.Type] = [CurrentLoader.self, Beta3Loader.self, LegacyLoader.self]
+        let loaderChain: [Loader.Type] = [CurrentLoader.self, Beta3Loader.self, LegacyLoader.self]
 
-        for LoaderType in LoaderChain {
+        for LoaderType in loaderChain {
             do {
                 let loader = LoaderType.init(containerURL: containerURL, environment: environment)
 

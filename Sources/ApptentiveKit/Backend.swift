@@ -288,6 +288,7 @@ class Backend {
 
     /// Loads the conversation using the specified loader.
     /// - Parameter loader: The loader that translates the stored conversation to the current format, if needed.
+    /// - Throws: An error if loading or merging the conversation fails.
     private func loadConversation(from loader: Loader) throws {
         let previousConversation = try loader.loadConversation()
         self.conversation = try previousConversation.merged(with: self.conversation)
