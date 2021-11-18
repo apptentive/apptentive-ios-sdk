@@ -381,8 +381,10 @@ class Backend {
             self.createConversationOnServer()
         }  // else we can't really do anything because we can't talk to the API.
 
-        // Mark the conversation as needing to be saved.
-        self.conversationNeedsSaving = true
+        if self.conversation != oldValue {
+            // Mark the conversation as needing to be saved.
+            self.conversationNeedsSaving = true
+        }
     }
 
     /// Saves the conversation and payload queue to persistent storage if needed.
