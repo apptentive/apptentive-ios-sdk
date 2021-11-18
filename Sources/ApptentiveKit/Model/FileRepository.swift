@@ -14,11 +14,6 @@ class FileRepository<T> {
     let fileManager: FileManager
     let filename: String
 
-    /// Whether the file this repository manages already exists on the filesystem.
-    var fileExists: Bool {
-        self.fileManager.fileExists(atPath: self.url.path)
-    }
-
     /// Initializes a new file repository.
     /// - Parameters:
     ///   - containerURL: A file URL pointing to the parent directory for the file.
@@ -28,14 +23,6 @@ class FileRepository<T> {
         self.containerURL = containerURL
         self.filename = filename
         self.fileManager = fileManager
-    }
-
-    /// Loads and decodes the repository's file.
-    /// - Throws: An error if the file can't be read or decoded.
-    /// - Returns: The decoded object that was encoded in the file.
-    func load() throws -> T {
-        let data = try self.loadData()
-        return try self.decode(data: data)
     }
 
     /// Encodes and saves the specified object to the repository's file.
@@ -56,26 +43,11 @@ class FileRepository<T> {
         ""
     }
 
-    /// Loads the raw encoded data from the filesystem.
-    /// - Throws: An error if the data could not be loaded.
-    /// - Returns: The encoded data read from the filesystem.
-    func loadData() throws -> Data {
-        return try Data(contentsOf: self.url)
-    }
-
     /// Saves the raw encoded data to the filesystem.
     /// - Parameter data: The data to be saved.
     /// - Throws: An error if the data could not be saved.
     fileprivate func save(data: Data) throws {
         try data.write(to: self.url, options: [.atomic])
-    }
-
-    /// Decodes encoded data into the desired object.
-    /// - Parameter data: The data to be decoded.
-    /// - Throws: An error if the data could not be decoded.
-    /// - Returns: The decoded object.
-    fileprivate func decode(data: Data) throws -> T {
-        throw ApptentiveError.internalInconsistency
     }
 
     /// Encodes the object into data ready to be saved.
@@ -91,10 +63,6 @@ class FileRepository<T> {
 class PropertyListRepository<T: Codable>: FileRepository<T> {
     let decoder = PropertyListDecoder()
     let encoder = PropertyListEncoder()
-
-    override func decode(data: Data) throws -> T {
-        return try self.decoder.decode(T.self, from: data)
-    }
 
     override func encode(object: T) throws -> Data {
         return try self.encoder.encode(object)

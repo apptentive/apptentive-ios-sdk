@@ -192,10 +192,6 @@ class PayloadSenderTests: XCTestCase {
     class SpyRepository: FileRepository<[Payload]> {
         var payloads = [Payload]()
 
-        override func load() throws -> [Payload] {
-            return self.payloads
-        }
-
         override func save(_ object: [Payload]) throws {
             self.payloads = object
         }
