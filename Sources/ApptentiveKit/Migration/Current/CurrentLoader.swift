@@ -18,9 +18,9 @@ struct CurrentLoader: Loader {
         let loaderChain: [Loader.Type] = [CurrentLoader.self, Beta3Loader.self, LegacyLoader.self]
 
         for LoaderType in loaderChain {
-            do {
-                let loader = LoaderType.init(containerURL: containerURL, environment: environment)
+            let loader = LoaderType.init(containerURL: containerURL, environment: environment)
 
+            do {
                 if loader.conversationFileExists {
                     try completion(loader)
 
@@ -28,6 +28,12 @@ struct CurrentLoader: Loader {
                 }
             } catch let error {
                 ApptentiveLogger.default.error("Error loading conversation from version \(String(describing: LoaderType)): \(error)")
+            }
+
+            do {
+                try loader.cleanUp()
+            } catch let error {
+                ApptentiveLogger.default.error("Error removing extraneous files for version \(String(describing: LoaderType)): \(error)")
             }
         }
     }

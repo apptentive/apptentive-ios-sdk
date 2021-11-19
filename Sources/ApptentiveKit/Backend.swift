@@ -151,13 +151,8 @@ class Backend {
         if self.conversationNeedsLoading {
             CurrentLoader.loadLatestVersion(containerURL: containerURL, environment: environment) { loader in
                 try self.loadConversation(from: loader)
-                do {
-                    try self.payloadSender.load(from: loader)
-                    try self.messageManager.load(from: loader)
-                    try loader.cleanUp()
-                } catch let error {
-                    ApptentiveLogger.default.error("Loading and/or cleaning up ancillary conversation files failed: \(error)")
-                }
+                try self.payloadSender.load(from: loader)
+                try self.messageManager.load(from: loader)
             }
         } else {
             ApptentiveLogger.default.info("In-memory conversation already contains data from any saved conversation.")
