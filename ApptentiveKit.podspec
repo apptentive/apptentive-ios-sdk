@@ -1,11 +1,10 @@
 Pod::Spec.new do |spec|
-
   spec.name             = "ApptentiveKit"
-  spec.version          = "6.0.0-beta.3"
+  spec.version          = "6.0.0-beta.4"
   spec.summary          = "Apptentive Customer Communications SDK."
   spec.homepage         = "https://www.apptentive.com/"
   spec.license          = "BSD"
-  spec.swift_version    = "5.3"
+  spec.swift_version    = "5.5"
   spec.author           = { 'Apptentive SDK Team' => 'https://learn.apptentive.com/article-categories/ios-native/' }
   spec.platform         = :ios, "11.0"
   spec.source           = { :git => "https://github.com/apptentive/apptentive-ios-sdk.git", :tag => spec.version }

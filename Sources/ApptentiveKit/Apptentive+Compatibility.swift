@@ -212,15 +212,6 @@ extension Apptentive {
         return false
     }
 
-    @available(*, deprecated, message: "Sending attachments is not implemented and this method has no effect.")
-    @objc(sendAttachmentText:) public func sendAttachment(_ text: String) {}
-
-    @available(*, deprecated, message: "Sending attachments is not implemented and this method has no effect.")
-    @objc(sendAttachmentImage:) public func sendAttachment(_ image: UIImage) {}
-
-    @available(*, deprecated, message: "Sending attachments is not implemented and this method has no effect.")
-    @objc(sendAttachmentData:mimeType:) public func sendAttachment(_ fileData: Data, mimeType: String) {}
-
     @available(*, deprecated, message: "Advertising identifier collection is not implemented.")
     @objc public var advertisingIdentifier: UUID? {
         get {

@@ -37,14 +37,6 @@ extension SurveyViewModel {
             Array(minValue...maxValue).map({ String($0) })
         }
 
-        /// The text to use for the accessibility hint for the specified segment.
-        public var accessibilityHintForSegment: String {
-            let minValue = String(self.minValue)
-            let maxValue = String(self.maxValue)
-
-            return "\(minValue) = \(minText ?? "the least") & \(maxValue) = \(maxText ?? "the most")"
-        }
-
         /// Used to indicate that the user has selected the choice at the given index.
         /// - Parameter index: The index of the choice that was selected.
         public func selectValue(at index: Int) {
@@ -63,6 +55,14 @@ extension SurveyViewModel {
 
         override var response: [Answer]? {
             self.value.flatMap { [Answer.range($0)] }
+        }
+
+        /// The text to use for the accessibility hint for the specified segment.
+        public var accessibilityHintForSegment: String {
+            let minValue = String(self.minValue)
+            let maxValue = String(self.maxValue)
+
+            return "\(minValue) = \(minText ?? "the least") & \(maxValue) = \(maxText ?? "the most")"
         }
     }
 }

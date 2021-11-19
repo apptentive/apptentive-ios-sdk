@@ -14,7 +14,9 @@ class BackendTests: XCTestCase {
     var backend: Backend!
     var requestor: SpyRequestor!
 
-    override func setUp() {
+    override func setUpWithError() throws {
+        try MockEnvironment.cleanContainerURL()
+
         let environment = MockEnvironment()
         let queue = DispatchQueue(label: "Test Queue")
 
@@ -29,7 +31,7 @@ class BackendTests: XCTestCase {
         let payloadSender = PayloadSender(requestRetrier: requestRetrier)
         payloadSender.credentialsProvider = conversation
 
-        self.backend = Backend(queue: queue, conversation: conversation, targeter: Targeter(), requestRetrier: requestRetrier, payloadSender: payloadSender)
+        self.backend = Backend(queue: queue, conversation: conversation, targeter: Targeter(), messageManager: MessageManager(), requestRetrier: requestRetrier, payloadSender: payloadSender)
     }
 
     func testPersonChange() {
@@ -43,7 +45,7 @@ class BackendTests: XCTestCase {
 
         self.backend.conversation.person.name = "Testy McTestface"
 
-        self.wait(for: [expectation], timeout: 600.0)
+        self.wait(for: [expectation], timeout: 5)
     }
 
     func testDeviceChange() {
@@ -57,7 +59,7 @@ class BackendTests: XCTestCase {
 
         self.backend.conversation.device.customData["string"] = "foo"
 
-        self.wait(for: [expectation], timeout: 600.0)
+        self.wait(for: [expectation], timeout: 5)
     }
 
     func testAppReleaseChange() {
@@ -71,6 +73,6 @@ class BackendTests: XCTestCase {
 
         self.backend.conversation.appRelease.version = "1.2.3"
 
-        self.wait(for: [expectation], timeout: 600.0)
+        self.wait(for: [expectation], timeout: 5)
     }
 }

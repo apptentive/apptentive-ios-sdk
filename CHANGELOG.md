@@ -1,3 +1,12 @@
+# 2021-11-18 - 6.0.0-beta.4
+
+#### Bug Fixes
+
+- Fix a bug that caused conversation size to grow exponentially
+- Fix a bug that could cause interactions to be counted twice for targeting purposes
+- Fix a bug that could cause requests to not be retried properly
+- Fix a bug that could cause survey responses to not send correctly
+
 # 2021-10-04 - 6.0.0-beta.3
 
 #### Bug Fixes

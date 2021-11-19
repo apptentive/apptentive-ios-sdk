@@ -120,8 +120,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
             self.applyApptentiveTheme()
         }
 
-        if !isTesting {
-
+        if !self.environment.isTesting {
             if credentials.key.isEmpty || credentials.signature.isEmpty {
                 assertionFailure("App key or signature is missing.")
             } else if !credentials.key.hasPrefix("IOS-") {
@@ -139,7 +138,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
                 case .failure(let error):
                     completion?(.failure(error))
                     ApptentiveLogger.default.error("Failed to register Apptentive SDK: \(error)")
-                    if !self.isTesting {
+                    if !self.environment.isTesting {
                         assertionFailure("Failed to register Apptentive SDK: Please double-check that the app key, signature, and the url is correct.")
                     }
                 }
@@ -177,6 +176,31 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
         }
     }
 
+    /// Sends the specified text as a hidden message to the app's dashboard.
+    /// - Parameter text: The text to send in the body of the message.
+    @objc(sendAttachmentText:)
+    public func sendAttachment(_ text: String) {
+        self.sendMessage(Message(body: text, isHidden: true))
+    }
+
+    /// Sends the specified image (encoded as a JPEG at 95% quality) attached to a hidden message to the app's dashboard.
+    /// - Parameter image: The image to encode and send.
+    @objc(sendAttachmentImage:)
+    public func sendAttachment(_ image: UIImage) {
+        let attachment = Message.Attachment(mediaType: "image/jpeg", filename: "image", url: nil, data: image.jpegData(compressionQuality: 0.95))
+        self.sendMessage(Message(attachments: [attachment], isHidden: true))
+    }
+
+    /// Sends the specified data attached to a hidden message to the app's dashboard.
+    /// - Parameters:
+    ///   - fileData: The contents of the file.
+    ///   - mediaType: The media type for the file.
+    @objc(sendAttachmentData:mimeType:)
+    public func sendAttachment(_ fileData: Data, mediaType: String) {
+        let attachment = Message.Attachment(mediaType: mediaType, filename: "file", url: nil, data: fileData)
+        self.sendMessage(Message(attachments: [attachment], isHidden: true))
+    }
+
     /// Creates a new Apptentive SDK object using the specified URL to communicate with the Apptentive API.
     ///
     /// This should only be used for testing the SDK against a server other than the production Apptentive API server.
@@ -207,6 +231,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
         self.containerDirectory = containerDirectory ?? "com.apptentive.feedback"
 
         self.backend = Backend(queue: self.backendQueue, environment: self.environment, baseURL: self.baseURL)
+
         self.interactionPresenter = InteractionPresenter()
 
         self.person = self.backend.conversation.person
@@ -215,20 +240,23 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
         super.init()
 
         self.environment.delegate = self
+        self.backend.frontend = self
+        self.interactionPresenter.delegate = self
+
         if self.environment.isProtectedDataAvailable {
             self.protectedDataDidBecomeAvailable(self.environment)
         }
 
-        // Typically we will be initialized too late to receive the ApplicationWillEnterForeground
-        // notification, so we have to manually record a launch event here.
-        // We are engaging the launch event inside the invalidateEngagementManifestForDebug method, and then refreshing the engagement manifest.
+        // The SDK will be initialized after the system sends the
+        // ApplicationWillEnterForeground notification, meaning that
+        // the tasks below have to be run explicitly.
         if self.environment.isInForeground {
             self.engage(event: .launch())
-            self.backend.invalidateEngagementManifestForDebug(environment: self.environment)
-        }
 
-        self.backend.frontend = self
-        self.interactionPresenter.delegate = self
+            self.backendQueue.async {
+                self.backend.invalidateEngagementManifestForDebug(environment: self.environment)
+            }
+        }
 
         ApptentiveLogger.default.info("Apptentive SDK Initialized.")
     }
@@ -277,6 +305,32 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
         }
     }
 
+    /// Delegates the sending of a message to the backend.
+    /// - Parameter message: The message to be sent.
+    func sendMessage(_ message: Message) {
+        self.backendQueue.async {
+            self.backend.sendMessage(message)
+        }
+    }
+    /// Receives the message manager from the backend.
+    /// - Parameter completion: A completion handler to be called when the message center view model is initialized.
+    func getMessages(completion: @escaping (MessageManager) -> Void) {
+        self.backendQueue.async {
+            let messageManager = self.backend.messageManager
+            DispatchQueue.main.async {
+                completion(messageManager)
+            }
+        }
+    }
+
+    var messageCenterInForeground: Bool = false {
+        didSet {
+            self.backendQueue.async {
+                self.backend.messageCenterInForeground = self.messageCenterInForeground
+            }
+        }
+    }
+
     // MARK: EnvironmentDelegate
 
     func protectedDataDidBecomeAvailable(_ environment: GlobalEnvironment) {
@@ -284,7 +338,7 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
             do {
                 let containerURL = try environment.applicationSupportURL().appendingPathComponent(self.containerDirectory)
 
-                try self.backend.load(containerURL: containerURL, environment: environment)
+                try self.backend.protectedDataDidBecomeAvailable(containerURL: containerURL, environment: environment)
 
                 self.person.merge(with: self.backend.conversation.person)
                 self.device.merge(with: self.backend.conversation.device)
@@ -297,16 +351,16 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
 
     func protectedDataWillBecomeUnavailable(_ environment: GlobalEnvironment) {
         self.backendQueue.async {
-            self.backend.unload()
+            self.backend.protectedDataWillBecomeUnavailable()
         }
     }
 
     func applicationWillEnterForeground(_ environment: GlobalEnvironment) {
-        self.engage(event: .launch())
-
         self.backendQueue.async {
             self.backend.willEnterForeground(environment: environment)
         }
+
+        self.engage(event: .launch())
     }
 
     func applicationDidEnterBackground(_ environment: GlobalEnvironment) {
@@ -343,11 +397,6 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
         self.backendQueue.async {
             self.backend.conversation.device = self.device
         }
-    }
-
-    /// Checks the environment to see if testing is taking place.
-    private var isTesting: Bool {
-        return ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 }
 

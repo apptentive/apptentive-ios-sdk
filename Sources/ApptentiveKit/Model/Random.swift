@@ -29,8 +29,8 @@ class Random: Equatable, Codable {
             return
         }
 
-        self.values.merge(newer.values) { old, new in
-            old + new
+        self.values.merge(newer.values) { old, _ in
+            old
         }
     }
 

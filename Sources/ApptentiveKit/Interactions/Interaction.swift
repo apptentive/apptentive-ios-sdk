@@ -39,23 +39,12 @@ public struct Interaction: Decodable {
         case "TextModal":
             self.configuration = .textModal(try container.decode(TextModalConfiguration.self, forKey: .configuration))
 
+        case "MessageCenter":
+            self.configuration = .messageCenter(try container.decode(MessageCenterConfiguration.self, forKey: .configuration))
+
         default:
             self.configuration = .notImplemented
         }
-    }
-
-    /// Initializes an interaction with the given parameters.
-    ///
-    /// This can be removed once the API sends us pre-transformed engagement manifests.
-    /// We need to be able to create new TextModal interactions to make the transform work.
-    /// - Parameters:
-    ///   - id: The interaction ID.
-    ///   - typeName: The type of interaction as a string.
-    ///   - configuration: The configuration as an enum value.
-    init(id: String, typeName: String, configuration: InteractionConfiguration) {
-        self.id = id
-        self.typeName = typeName
-        self.configuration = configuration
     }
 
     enum InteractionCodingKeys: String, CodingKey {
@@ -70,6 +59,7 @@ public struct Interaction: Decodable {
         case navigateToLink(NavigateToLinkConfiguration)
         case survey(SurveyConfiguration)
         case textModal(TextModalConfiguration)
+        case messageCenter(MessageCenterConfiguration)
         case notImplemented
     }
 }

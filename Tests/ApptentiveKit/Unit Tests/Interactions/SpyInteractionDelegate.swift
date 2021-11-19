@@ -11,6 +11,9 @@ import Foundation
 @testable import ApptentiveKit
 
 class SpyInteractionDelegate: InteractionDelegate {
+
+    var messageCenterInForeground: Bool = false
+
     var engagedEvent: Event?
     var sentSurveyResponse: SurveyResponse?
     var shouldRequestReviewSucceed = true
@@ -18,6 +21,7 @@ class SpyInteractionDelegate: InteractionDelegate {
     var openedURL: URL? = nil
     var responses: [String: [Answer]] = [:]
     var termsOfService: TermsOfService?
+    var messageManager: MessageManager?
 
     func engage(event: Event) {
         self.engagedEvent = event
@@ -42,5 +46,15 @@ class SpyInteractionDelegate: InteractionDelegate {
 
     func recordResponse(_ answers: [Answer], for questionID: String) {
         responses[questionID] = answers
+    }
+
+    func getMessages(completion: @escaping (MessageManager) -> Void) {
+        guard let messageManager = self.messageManager else { return }
+        completion(messageManager)
+    }
+
+    func sendMessage(_ message: Message) {
+        //TODO: Initialize the MessageList if nil
+        self.messageManager?.messageList?.messages.append(message)
     }
 }
