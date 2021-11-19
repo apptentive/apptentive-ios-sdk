@@ -1,5 +1,4 @@
 Pod::Spec.new do |spec|
-
   spec.name             = "ApptentiveKit"
   spec.version          = "6.0.0-beta.4"
   spec.summary          = "Apptentive Customer Communications SDK."

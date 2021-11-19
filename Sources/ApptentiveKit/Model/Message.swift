@@ -11,7 +11,7 @@ import Foundation
 /// Represents an individual message within a list of messages.
 public struct Message: Codable {
     /// The custom data associated with the message.
-    var customData: CustomData
+    var customData: CustomData?
     /// The message id.
     let id: String?
     /// Indicates if the message is being received from the dashboard.
@@ -30,7 +30,7 @@ public struct Message: Codable {
     var sentDate: Date
 
     internal init(
-        body: String? = nil, attachments: [Message.Attachment] = [], isHidden: Bool = false, customData: CustomData = CustomData(), id: String? = nil, sentByLocalUser: Bool = true, isAutomated: Bool = false, sender: Message.Sender? = nil,
+        body: String? = nil, attachments: [Message.Attachment] = [], isHidden: Bool = false, customData: CustomData? = nil, id: String? = nil, sentByLocalUser: Bool = true, isAutomated: Bool = false, sender: Message.Sender? = nil,
         sentDate: Date = Date()
     ) {
         self.customData = customData
@@ -85,14 +85,14 @@ public struct Message: Codable {
     }
 
     /// Describes the media attachment assoiciated with each message.
-    struct Attachment: Codable {
+    struct Attachment: Codable, Equatable {
         /// The specific media type.
         let mediaType: String
         /// The filename of the media type.
         let filename: String
-        /// The data contents of the media.
-        let data: Data?
         /// The URL for the media type.
         let url: URL?
+        /// The data for the attachment.
+        let data: Data?
     }
 }
