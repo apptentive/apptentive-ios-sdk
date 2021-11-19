@@ -8,8 +8,15 @@
 
 import Foundation
 
+/// Represents an object that is notified when messages are refreshed from the backend.
+protocol MessageManagerDelegate: AnyObject {
+    var downloadedMessageList: MessageList? { get set }
+}
+
 /// Provides multiple ways to interact with the MessageList.
 class MessageManager {
+
+    var delegate: MessageManagerDelegate?
 
     /// The Message List object.
     ///
@@ -17,36 +24,30 @@ class MessageManager {
     var messageList: MessageList? {
         didSet {
             self.lastFetchDate = Date()
+            if let messageList = messageList {
+                self.delegate?.downloadedMessageList = messageList
+            }
         }
     }
 
     var lastFetchDate: Date?
 
-    /// The persistence repository used for the message list.
-    var messageListRepository: PropertyListRepository<MessageList>? {
-        didSet {
-            do {
-                guard let repository = messageListRepository, repository.fileExists else {
-                    ApptentiveLogger.default.debug("No messages in persistence storage.")
-                    return
-                }
-                let savedMessageList = try repository.load()
-                self.messageList = savedMessageList
-            } catch let error {
-                ApptentiveLogger.default.error("Unable to load messages from peristence: \(error)")
-            }
-        }
+    /// The saver used for the message list.
+    var messageListSaver: PropertyListSaver<MessageList>?
+
+    static func createSaver(containerURL: URL, filename: String, fileManager: FileManager) -> PropertyListSaver<MessageList> {
+        return PropertyListSaver<MessageList>(containerURL: containerURL, filename: filename, fileManager: fileManager)
     }
 
-    static func createRepository(containerURL: URL, filename: String, fileManager: FileManager) -> PropertyListRepository<MessageList> {
-        return PropertyListRepository<MessageList>(containerURL: containerURL, filename: filename, fileManager: fileManager)
+    func load(from loader: Loader) throws {
+        self.messageList = try loader.loadMessages()
     }
 
     func saveMessagesToDisk() throws {
-        if let messageListRepository = self.messageListRepository,
+        if let messageListSaver = self.messageListSaver,
             let messageList = self.messageList
         {
-            try messageListRepository.save(messageList)
+            try messageListSaver.save(messageList)
         }
     }
 }

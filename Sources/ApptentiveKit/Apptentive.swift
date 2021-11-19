@@ -180,8 +180,25 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
     /// - Parameter text: The text to send in the body of the message.
     @objc(sendAttachmentText:)
     public func sendAttachment(_ text: String) {
-
         self.sendMessage(Message(body: text, isHidden: true))
+    }
+
+    /// Sends the specified image (encoded as a JPEG at 95% quality) attached to a hidden message to the app's dashboard.
+    /// - Parameter image: The image to encode and send.
+    @objc(sendAttachmentImage:)
+    public func sendAttachment(_ image: UIImage) {
+        let attachment = Message.Attachment(mediaType: "image/jpeg", filename: "image", url: nil, data: image.jpegData(compressionQuality: 0.95))
+        self.sendMessage(Message(attachments: [attachment], isHidden: true))
+    }
+
+    /// Sends the specified data attached to a hidden message to the app's dashboard.
+    /// - Parameters:
+    ///   - fileData: The contents of the file.
+    ///   - mediaType: The media type for the file.
+    @objc(sendAttachmentData:mimeType:)
+    public func sendAttachment(_ fileData: Data, mediaType: String) {
+        let attachment = Message.Attachment(mediaType: mediaType, filename: "file", url: nil, data: fileData)
+        self.sendMessage(Message(attachments: [attachment], isHidden: true))
     }
 
     /// Creates a new Apptentive SDK object using the specified URL to communicate with the Apptentive API.
@@ -295,13 +312,21 @@ public class Apptentive: NSObject, EnvironmentDelegate, InteractionDelegate {
             self.backend.sendMessage(message)
         }
     }
-    /// Receives the message list from the backend.
+    /// Receives the message manager from the backend.
     /// - Parameter completion: A completion handler to be called when the message center view model is initialized.
-    func getMessages(completion: @escaping (MessageList) -> Void) {
-        guard let messageList = self.backend.messageManager.messageList else { return }
+    func getMessages(completion: @escaping (MessageManager) -> Void) {
         self.backendQueue.async {
+            let messageManager = self.backend.messageManager
             DispatchQueue.main.async {
-                completion(messageList)
+                completion(messageManager)
+            }
+        }
+    }
+
+    var messageCenterInForeground: Bool = false {
+        didSet {
+            self.backendQueue.async {
+                self.backend.messageCenterInForeground = self.messageCenterInForeground
             }
         }
     }
