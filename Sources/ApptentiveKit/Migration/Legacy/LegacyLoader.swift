@@ -73,16 +73,16 @@ struct LegacyLoader: Loader {
     func cleanUp() throws {
         // Until we're out of beta, keep the legacy conversation around.
 
-        //        let data = try Data(contentsOf: self.metadataURL)
-        //        let legacyConversationMetadata = try NSKeyedUnarchiver.unarchivedObject(ofClass: LegacyConversationMetadata.self, from: data)
+        // let data = try Data(contentsOf: self.metadataURL)
+        // let legacyConversationMetadata = try NSKeyedUnarchiver.unarchivedObject(ofClass: LegacyConversationMetadata.self, from: data)
         //
-        //        // Look for an anonymous conversation's metadata item.
-        //        try legacyConversationMetadata?.items.compactMap { $0.directoryName }.forEach { directoryName in
-        //            let conversationDirectoryURL = self.containerURL.appendingPathComponent(directoryName, isDirectory: true)
-        //            try self.environment.fileManager.removeItem(at: conversationDirectoryURL)
-        //        }
+        // // Look for an anonymous conversation's metadata item.
+        // try legacyConversationMetadata?.items.compactMap { $0.directoryName }.forEach { directoryName in
+        //     let conversationDirectoryURL = self.containerURL.appendingPathComponent(directoryName, isDirectory: true)
+        //     try self.environment.fileManager.removeItem(at: conversationDirectoryURL)
+        // }
         //
-        //        try self.environment.fileManager.removeItem(at: self.metadataURL)
+        // try self.environment.fileManager.removeItem(at: self.metadataURL)
     }
 
     private var metadataURL: URL {
